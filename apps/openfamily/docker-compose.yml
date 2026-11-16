@@ -1,0 +1,29 @@
+services:
+  openfamily:
+    # The web interface, the API and PostgreSQL in one container. Its secrets
+    # are generated on the first start and kept in /data.
+    image: ghcr.io/nexaflowfrance/openfamily:2.2.0
+    restart: unless-stopped
+    environment:
+      - REGISTRATION_ENABLED=${OPENFAMILY_REGISTRATION_ENABLED:-true}
+      # Single sign-on (OpenID Connect): off while the issuer URL is empty.
+      - APP_PUBLIC_URL=${OPENFAMILY_PUBLIC_URL:-}
+      - OIDC_ISSUER_URL=${OPENFAMILY_OIDC_ISSUER_URL:-}
+      - OIDC_CLIENT_ID=${OPENFAMILY_OIDC_CLIENT_ID:-}
+      - OIDC_CLIENT_SECRET=${OPENFAMILY_OIDC_CLIENT_SECRET:-}
+      - OIDC_PROVIDER_NAME=${OPENFAMILY_OIDC_PROVIDER_NAME:-}
+      - PASSWORD_LOGIN_ENABLED=${OPENFAMILY_PASSWORD_LOGIN_ENABLED:-true}
+    volumes:
+      - ${APP_DATA_DIR}/data/openfamily:/data
+    healthcheck:
+      test: wget -qO- http://127.0.0.1:3000/health >/dev/null 2>&1 || exit 1
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 90s
+    x-runtipi:
+      is_main: true
+      internal_port: '3000'
+
+x-runtipi:
+  schema_version: 2
